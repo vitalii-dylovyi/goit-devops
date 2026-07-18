@@ -1,0 +1,86 @@
+controller:
+  admin:
+    username: admin
+    password: admin123
+
+  serviceType: LoadBalancer
+  servicePort: 80
+
+  resources:
+    limits:
+      cpu: "500m"
+      memory: "1Gi"
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+
+  installPlugins:
+    - kubernetes:latest
+    - workflow-aggregator:latest
+    - git:latest
+    - configuration-as-code:latest
+    - credentials-binding:latest
+    - github:latest
+    - docker-plugin:latest
+    - docker-workflow:latest
+    - job-dsl:latest
+
+  JCasC:
+    configScripts:
+      credentials: |
+        credentials:
+          system:
+            domainCredentials:
+              - credentials:
+                  - usernamePassword:
+                      scope: GLOBAL
+                      id: github-token
+                      username: <YOUR_GITHUB_USERNAME>
+                      password: <YOUR_GITHUB_PAT>
+                      description: GitHub PAT
+      seed-job: |
+        jobs:
+          - script: >
+              job('seed-job') {
+                description('Job to generate pipeline for Django project')
+                scm {
+                  git {
+                    remote {
+                      url('https://github.com/vitalii-dylovyi/goit-devops.git')
+                      credentials('github-token')
+                    }
+                    branches('*/lesson-8-9')
+                  }
+                }
+                steps {
+                  dsl {
+                    text('''
+                      pipelineJob("goit-django-docker") {
+                        definition {
+                          cpsScm {
+                            scm {
+                              git {
+                                remote {
+                                  url("https://github.com/vitalii-dylovyi/goit-devops.git")
+                                  credentials("github-token")
+                                }
+                                branches("*/lesson-8-9")
+                              }
+                            }
+                            scriptPath("lesson-8-9/Jenkinsfile")
+                          }
+                        }
+                      }
+                    ''')
+                  }
+                }
+              }
+
+persistentVolume:
+  enabled: true
+  storageClass: "ebs-sc"
+  size: 10Gi
+
+serviceAccount:
+  name: jenkins-sa
+  create: false

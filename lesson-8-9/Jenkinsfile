@@ -1,0 +1,78 @@
+pipeline {
+  agent {
+    kubernetes {
+      yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    some-label: jenkins-kaniko
+spec:
+  serviceAccountName: jenkins-sa
+  containers:
+    - name: kaniko
+      image: gcr.io/kaniko-project/executor:v1.16.0-debug
+      imagePullPolicy: Always
+      command: ["sleep"]
+      args: ["99d"]
+    - name: git
+      image: alpine/git
+      command: ["sleep"]
+      args: ["99d"]
+"""
+    }
+  }
+
+  environment {
+    ECR_REGISTRY = "<ACCOUNT_ID>.dkr.ecr.us-west-2.amazonaws.com"
+    IMAGE_NAME   = "lesson-8-9-ecr"
+    IMAGE_TAG    = "v1.0.${BUILD_NUMBER}"
+
+    GIT_REPO     = "github.com/vitalii-dylovyi/goit-devops.git"
+    CHART_VALUES = "lesson-8-9/charts/django-app/values.yaml"
+
+    COMMIT_EMAIL = "jenkins@localhost"
+    COMMIT_NAME  = "jenkins"
+  }
+
+  stages {
+    stage('Build & Push Docker Image') {
+      steps {
+        container('kaniko') {
+          sh '''
+            /kaniko/executor \
+              --context=`pwd`/lesson-8-9 \
+              --dockerfile=`pwd`/lesson-8-9/Dockerfile \
+              --destination=$ECR_REGISTRY/$IMAGE_NAME:$IMAGE_TAG \
+              --cache=true \
+              --insecure \
+              --skip-tls-verify
+          '''
+        }
+      }
+    }
+
+    stage('Update Chart Tag in Git') {
+      steps {
+        container('git') {
+          withCredentials([usernamePassword(credentialsId: 'github-token', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PAT')]) {
+            sh '''
+              git clone https://$GIT_USERNAME:$GIT_PAT@$GIT_REPO repo
+              cd repo
+              git checkout lesson-8-9
+
+              sed -i "s|tag:.*|tag: \\"$IMAGE_TAG\\"|" lesson-8-9/charts/django-app/values.yaml
+
+              git config user.email "$COMMIT_EMAIL"
+              git config user.name "$COMMIT_NAME"
+
+              git add lesson-8-9/charts/django-app/values.yaml
+              git commit -m "ci: update django image tag to $IMAGE_TAG"
+              git push origin lesson-8-9
+            '''
+          }
+        }
+      }
+    }
+  }
+}

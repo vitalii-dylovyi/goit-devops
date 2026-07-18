@@ -1,0 +1,48 @@
+# Docker image pushed to ECR
+image:
+  repository: <ACCOUNT_ID>.dkr.ecr.us-west-2.amazonaws.com/lesson-8-9-ecr
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# Number of replicas (overridden by the HPA once it is active)
+replicaCount: 2
+
+# Kubernetes Service
+service:
+  type: LoadBalancer
+  port: 80
+  targetPort: 8000
+
+# Container resource requests/limits (requests are required for the HPA)
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Horizontal Pod Autoscaler
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+
+# Environment variables -> ConfigMap (migrated from theme 4)
+config:
+  POSTGRES_DB: study_db
+  POSTGRES_USER: study_user
+  POSTGRES_PASSWORD: study_password
+  POSTGRES_HOST: db
+  POSTGRES_PORT: "5432"
+  DJANGO_SETTINGS_MODULE: study_project.settings
+
+# Ingress (bonus, disabled by default)
+ingress:
+  enabled: false
+  className: nginx
+  host: django.example.com
+  path: /
+  pathType: Prefix
+  tls: false
