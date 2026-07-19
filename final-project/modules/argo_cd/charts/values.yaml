@@ -1,0 +1,24 @@
+applications:
+  - name: django-app
+    namespace: default
+    project: default
+    source:
+      repoURL: https://github.com/vitalii-dylovyi/goit-devops.git
+      path: final-project/charts/django-app
+      targetRevision: final-project
+      helm:
+        valueFiles:
+          - values.yaml
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: default
+    syncPolicy:
+      automated:
+        prune: true
+        selfHeal: true
+
+repositories:
+  - name: goit-devops
+    url: https://github.com/vitalii-dylovyi/goit-devops.git
+    username: <YOUR_GITHUB_USERNAME>
+    password: <YOUR_GITHUB_PAT>
