@@ -72,7 +72,7 @@ module "eks" {
   source             = "./modules/eks"
   cluster_name       = var.cluster_name
   kubernetes_version = "1.30"
-  subnet_ids         = module.vpc.public_subnet_ids
+  subnet_ids         = module.vpc.private_subnet_ids
   instance_types     = ["t3.medium"]
   desired_size       = 2
   min_size           = 2
@@ -105,7 +105,7 @@ module "rds" {
 
   vpc_id              = module.vpc.vpc_id
   subnet_private_ids  = module.vpc.private_subnet_ids
-  subnet_public_ids   = module.vpc.public_subnet_ids
+  subnet_public_ids   = module.vpc.private_subnet_ids
   publicly_accessible = false
 
   parameters = {
