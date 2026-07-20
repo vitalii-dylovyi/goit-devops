@@ -9,3 +9,4 @@ override.tf
 override.tf.json
 .terraformrc
 terraform.rc
+!*.tfvars.example
