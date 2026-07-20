@@ -1,3 +1,6 @@
+# Restrict pull access to THIS AWS account instead of the public internet
+data "aws_caller_identity" "current" {}
+
 resource "aws_ecr_repository" "this" {
   name                 = var.ecr_name
   image_tag_mutability = "MUTABLE"
@@ -25,14 +28,13 @@ resource "aws_ecr_lifecycle_policy" "this" {
           countType   = "imageCountMoreThan"
           countNumber = 10
         }
-        action = {
-          type = "expire"
-        }
+        action = { type = "expire" }
       }
     ]
   })
 }
 
+# Pull is allowed ONLY for principals in this account (private repository).
 resource "aws_ecr_repository_policy" "this" {
   repository = aws_ecr_repository.this.name
 
@@ -40,9 +42,11 @@ resource "aws_ecr_repository_policy" "this" {
     Version = "2008-10-17"
     Statement = [
       {
-        Sid       = "AllowPull"
-        Effect    = "Allow"
-        Principal = "*"
+        Sid    = "AllowPullFromAccount"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
         Action = [
           "ecr:GetDownloadUrlForLayer",
           "ecr:BatchGetImage",
