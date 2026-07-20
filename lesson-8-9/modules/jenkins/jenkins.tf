@@ -63,28 +63,23 @@ resource "helm_release" "jenkins" {
   namespace        = "jenkins"
   repository       = "https://charts.jenkins.io"
   chart            = "jenkins"
-  version          = var.chart_version
   create_namespace = true
 
   values = [
     templatefile("${path.module}/values.yaml.tmpl", {
-      github_username = var.github_username
-      github_pat      = var.github_pat
+      github_username  = var.github_username
+      github_pat       = var.github_pat
+      kaniko_role_arn  = aws_iam_role.jenkins_kaniko_role.arn
     })
   ]
+
+  set_sensitive {
+    name  = "controller.admin.password"
+    value = var.jenkins_admin_password
+  }
+
+  timeout = 900
 
   depends_on = [kubernetes_storage_class_v1.ebs_sc]
 }
 
-# Service account bound to the Kaniko IAM role via IRSA
-resource "kubernetes_service_account" "jenkins_sa" {
-  metadata {
-    name      = "jenkins-sa"
-    namespace = "jenkins"
-    annotations = {
-      "eks.amazonaws.com/role-arn" = aws_iam_role.jenkins_kaniko_role.arn
-    }
-  }
-
-  depends_on = [helm_release.jenkins]
-}

@@ -8,7 +8,7 @@ terraform {
     }
     helm = {
       source  = "hashicorp/helm"
-      version = ">= 2.0.0"
+      version = "~> 2.17"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
@@ -27,7 +27,8 @@ provider "aws" {
 
 # Token used by helm/kubernetes providers to authenticate to the EKS API
 data "aws_eks_cluster_auth" "this" {
-  name = module.eks.cluster_name
+  name       = module.eks.cluster_name
+  depends_on = [module.eks]
 }
 
 provider "kubernetes" {
@@ -88,6 +89,7 @@ module "jenkins" {
   oidc_provider_url = module.eks.oidc_provider_url
   github_username   = var.github_username
   github_pat        = var.github_pat
+  jenkins_admin_password = var.jenkins_admin_password
 
   providers = {
     helm       = helm

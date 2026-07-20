@@ -40,3 +40,10 @@ variable "github_pat" {
   sensitive   = true
   default     = ""
 }
+
+variable "jenkins_admin_password" {
+  description = "Jenkins admin password, supplied via TF_VAR_jenkins_admin_password"
+  type        = string
+  sensitive   = true
+  default     = "admin123"
+}

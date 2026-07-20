@@ -1,6 +1,7 @@
 controller:
   admin:
     username: admin
+    password: admin123
 
   serviceType: LoadBalancer
   servicePort: 80
@@ -34,8 +35,8 @@ controller:
                   - usernamePassword:
                       scope: GLOBAL
                       id: github-token
-                      username: ${github_username}
-                      password: ${github_pat}
+                      username: vitalii-dylovyi
+                      password: <YOUR_GITHUB_PAT>
                       description: GitHub PAT
       seed-job: |
         jobs:
@@ -81,7 +82,5 @@ persistentVolume:
   size: 10Gi
 
 serviceAccount:
-  create: true
   name: jenkins-sa
-  annotations:
-    eks.amazonaws.com/role-arn: ${kaniko_role_arn}
+  create: false

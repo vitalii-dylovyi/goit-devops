@@ -1,0 +1,9 @@
+NAME            READY   STATUS    RESTARTS   AGE
+pod/jenkins-0   2/2     Running   0          9m33s
+
+NAME                    TYPE           CLUSTER-IP       EXTERNAL-IP                                                              PORT(S)        AGE
+service/jenkins         LoadBalancer   172.20.199.61    a7f19ae050a134253a86493be933c2dd-719639996.us-west-2.elb.amazonaws.com   80:32022/TCP   9m34s
+service/jenkins-agent   ClusterIP      172.20.212.224   <none>                                                                   50000/TCP      9m34s
+
+NAME                       READY   AGE
+statefulset.apps/jenkins   1/1     9m34s
