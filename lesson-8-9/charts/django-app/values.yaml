@@ -1,7 +1,7 @@
 # Docker image pushed to ECR
 image:
   repository: 710353053240.dkr.ecr.us-west-2.amazonaws.com/lesson-8-9-ecr
-  tag: latest
+  tag: "v1.0.1"
   pullPolicy: IfNotPresent
 
 # Number of replicas (overridden by the HPA once it is active)
