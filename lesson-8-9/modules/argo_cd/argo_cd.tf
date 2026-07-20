@@ -23,5 +23,15 @@ resource "helm_release" "argo_apps" {
     file("${path.module}/charts/values.yaml")
   ]
 
+  set {
+    name  = "repositories[0].username"
+    value = var.github_username
+  }
+
+  set_sensitive {
+    name  = "repositories[0].password"
+    value = var.github_pat
+  }
+
   depends_on = [helm_release.argo_cd]
 }

@@ -67,7 +67,10 @@ resource "helm_release" "jenkins" {
   create_namespace = true
 
   values = [
-    file("${path.module}/values.yaml")
+    templatefile("${path.module}/values.yaml.tmpl", {
+      github_username = var.github_username
+      github_pat      = var.github_pat
+    })
   ]
 
   depends_on = [kubernetes_storage_class_v1.ebs_sc]

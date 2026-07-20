@@ -27,3 +27,16 @@ variable "cluster_name" {
   type        = string
   default     = "lesson-8-9-eks"
 }
+
+variable "github_username" {
+  description = "GitHub username for Jenkins/Argo CD repository credentials"
+  type        = string
+  default     = ""
+}
+
+variable "github_pat" {
+  description = "GitHub Personal Access Token, supplied via TF_VAR_github_pat (never committed)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}

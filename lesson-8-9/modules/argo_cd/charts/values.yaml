@@ -20,5 +20,5 @@ applications:
 repositories:
   - name: goit-devops
     url: https://github.com/vitalii-dylovyi/goit-devops.git
-    username: <YOUR_GITHUB_USERNAME>
-    password: <YOUR_GITHUB_PAT>
+    username: ""
+    password: ""
