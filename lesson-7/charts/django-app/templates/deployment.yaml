@@ -25,6 +25,16 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ .Release.Name }}-config
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.service.targetPort }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.service.targetPort }}
+            initialDelaySeconds: 20
+            periodSeconds: 20
           resources:
             requests:
               cpu: {{ .Values.resources.requests.cpu }}

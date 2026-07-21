@@ -1,6 +1,8 @@
 # Docker image pushed to ECR
+# repository is intentionally empty: supplied at install time via
+# `helm --set image.repository=<ECR_URL>`
 image:
-  repository: <ACCOUNT_ID>.dkr.ecr.us-west-2.amazonaws.com/lesson-7-ecr
+  repository: ""
   tag: latest
   pullPolicy: IfNotPresent
 
