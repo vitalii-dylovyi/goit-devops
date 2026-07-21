@@ -1,18 +1,17 @@
 controller:
   admin:
     username: admin
-    password: admin123
 
   serviceType: LoadBalancer
   servicePort: 80
 
   resources:
     limits:
-      cpu: "500m"
-      memory: "1Gi"
+      cpu: '500m'
+      memory: '1Gi'
     requests:
-      cpu: "250m"
-      memory: "512Mi"
+      cpu: '250m'
+      memory: '512Mi'
 
   installPlugins:
     - kubernetes:latest
@@ -35,8 +34,8 @@ controller:
                   - usernamePassword:
                       scope: GLOBAL
                       id: github-token
-                      username: <YOUR_GITHUB_USERNAME>
-                      password: <YOUR_GITHUB_PAT>
+                      username: ${github_username}
+                      password: ${github_pat}
                       description: GitHub PAT
       seed-job: |
         jobs:
@@ -78,9 +77,11 @@ controller:
 
 persistentVolume:
   enabled: true
-  storageClass: "ebs-sc"
+  storageClass: 'ebs-sc'
   size: 10Gi
 
 serviceAccount:
+  create: true
   name: jenkins-sa
-  create: false
+  annotations:
+    eks.amazonaws.com/role-arn: ${kaniko_role_arn}

@@ -1,6 +1,8 @@
 # Docker image pushed to ECR
+# repository is empty on purpose: the Jenkins pipeline rewrites it (and tag)
+# with the real ECR URL, or supply it via helm --set image.repository=<ECR_URL>
 image:
-  repository: <ACCOUNT_ID>.dkr.ecr.us-west-2.amazonaws.com/final-project-ecr
+  repository: ""
   tag: latest
   pullPolicy: IfNotPresent
 
@@ -29,14 +31,18 @@ autoscaling:
   maxReplicas: 6
   targetCPUUtilizationPercentage: 70
 
-# Environment variables -> ConfigMap (migrated from theme 4)
+# Non-sensitive environment variables -> ConfigMap (migrated from theme 4)
 config:
   POSTGRES_DB: study_db
   POSTGRES_USER: study_user
-  POSTGRES_PASSWORD: study_password
   POSTGRES_HOST: db
   POSTGRES_PORT: "5432"
   DJANGO_SETTINGS_MODULE: study_project.settings
+
+# Sensitive env -> rendered into a Kubernetes Secret (NOT a ConfigMap).
+# Override in production via ArgoCD/helm --set or a SealedSecret; do not commit real values.
+secretConfig:
+  POSTGRES_PASSWORD: "CHANGE_ME"
 
 # Ingress (bonus, disabled by default)
 ingress:

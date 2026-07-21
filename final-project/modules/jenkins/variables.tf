@@ -18,3 +18,20 @@ variable "chart_version" {
   type        = string
   default     = "5.8.27"
 }
+
+variable "github_username" {
+  description = "GitHub username for the github-token credential"
+  type        = string
+}
+
+variable "github_pat" {
+  description = "GitHub Personal Access Token (injected at apply time, not committed)"
+  type        = string
+  sensitive   = true
+}
+
+variable "jenkins_admin_password" {
+  description = "Jenkins admin password (injected at apply time, not committed)"
+  type        = string
+  sensitive   = true
+}

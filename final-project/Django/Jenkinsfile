@@ -1,36 +1,63 @@
 pipeline {
   agent {
     kubernetes {
-      yaml """
+      // Single-quoted so shell ${...} inside the pod spec is NOT interpolated by Groovy
+      yaml '''
 apiVersion: v1
 kind: Pod
 metadata:
   labels:
-    some-label: jenkins-kaniko
+    app: jenkins-kaniko
 spec:
   serviceAccountName: jenkins-sa
+  initContainers:
+    # Authenticate to ECR via IRSA and write Kaniko's docker config
+    - name: aws-cli
+      image: amazon/aws-cli:2.17.0
+      command: ["/bin/sh", "-c"]
+      args:
+        - |
+          set -e
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          REGISTRY="${ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+          PASSWORD=$(aws ecr get-login-password --region us-west-2)
+          AUTH=$(printf "AWS:%s" "$PASSWORD" | base64 -w0)
+          mkdir -p /kaniko/.docker
+          printf '{"auths":{"%s":{"auth":"%s"}}}' "$REGISTRY" "$AUTH" > /kaniko/.docker/config.json
+          echo "$REGISTRY" > /kaniko/.docker/ecr_registry
+      volumeMounts:
+        - name: docker-config
+          mountPath: /kaniko/.docker
   containers:
     - name: kaniko
       image: gcr.io/kaniko-project/executor:v1.16.0-debug
       imagePullPolicy: Always
       command: ["sleep"]
       args: ["99d"]
+      volumeMounts:
+        - name: docker-config
+          mountPath: /kaniko/.docker
     - name: git
       image: alpine/git
       command: ["sleep"]
       args: ["99d"]
-"""
+      volumeMounts:
+        - name: docker-config
+          mountPath: /kaniko/.docker
+  volumes:
+    - name: docker-config
+      emptyDir: {}
+'''
     }
   }
 
   environment {
-    ECR_REGISTRY = "<ACCOUNT_ID>.dkr.ecr.us-west-2.amazonaws.com"
+    AWS_REGION   = "us-west-2"
     IMAGE_NAME   = "final-project-ecr"
     IMAGE_TAG    = "v1.0.${BUILD_NUMBER}"
-
     GIT_REPO     = "github.com/vitalii-dylovyi/goit-devops.git"
     GIT_BRANCH   = "final-project"
-
+    CHART_VALUES = "final-project/charts/django-app/values.yaml"
     COMMIT_EMAIL = "jenkins@localhost"
     COMMIT_NAME  = "jenkins"
   }
@@ -40,34 +67,41 @@ spec:
       steps {
         container('kaniko') {
           sh '''
+            set -e
+            ECR_REGISTRY=$(cat /kaniko/.docker/ecr_registry)
             /kaniko/executor \
               --context=`pwd`/final-project/Django \
               --dockerfile=`pwd`/final-project/Django/Dockerfile \
               --destination=$ECR_REGISTRY/$IMAGE_NAME:$IMAGE_TAG \
-              --cache=true \
-              --insecure \
-              --skip-tls-verify
+              --cache=true
           '''
         }
       }
     }
 
-    stage('Update Chart Tag in Git') {
+    stage('Update Chart Image in Git') {
       steps {
         container('git') {
           withCredentials([usernamePassword(credentialsId: 'github-token', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PAT')]) {
             sh '''
+              set -e
+              ECR_REGISTRY=$(cat /kaniko/.docker/ecr_registry)
               git clone https://$GIT_USERNAME:$GIT_PAT@$GIT_REPO repo
               cd repo
               git checkout $GIT_BRANCH
 
-              sed -i "s|tag:.*|tag: \\"$IMAGE_TAG\\"|" final-project/charts/django-app/values.yaml
+              # update BOTH the real ECR repository and the tag
+              sed -i "s|repository:.*|repository: ${ECR_REGISTRY}/${IMAGE_NAME}|" $CHART_VALUES
+              sed -i "s|tag:.*|tag: \\"$IMAGE_TAG\\"|" $CHART_VALUES
 
               git config user.email "$COMMIT_EMAIL"
               git config user.name "$COMMIT_NAME"
+              git add $CHART_VALUES
 
-              git add final-project/charts/django-app/values.yaml
-              git commit -m "ci: update django image tag to $IMAGE_TAG"
+              # webhook loop guard: do nothing if the values did not change
+              git diff --cached --quiet && { echo "No changes; skipping commit"; exit 0; }
+
+              git commit -m "ci: update django image to $IMAGE_TAG"
               git push origin $GIT_BRANCH
             '''
           }

@@ -34,3 +34,23 @@ variable "db_password" {
   sensitive   = true
   default     = "admin123AWS23"
 }
+
+variable "github_username" {
+  description = "GitHub username for Jenkins/Argo CD repository credentials"
+  type        = string
+  default     = ""
+}
+
+variable "github_pat" {
+  description = "GitHub Personal Access Token, supplied via TF_VAR_github_pat (never committed)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "jenkins_admin_password" {
+  description = "Jenkins admin password, supplied via TF_VAR_jenkins_admin_password (never committed)"
+  type        = string
+  sensitive   = true
+  default     = "admin123"
+}
