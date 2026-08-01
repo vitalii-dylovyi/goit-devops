@@ -17,8 +17,7 @@ variable "grafana_chart_version" {
 }
 
 variable "grafana_admin_password" {
-  description = "Grafana admin password"
+  description = "Grafana admin password (injected at apply time, not committed)"
   type        = string
-  default     = "admin123"
   sensitive   = true
 }

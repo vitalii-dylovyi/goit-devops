@@ -17,7 +17,7 @@ resource "helm_release" "grafana" {
   version          = var.grafana_chart_version
   create_namespace = false
 
-  set {
+  set_sensitive {
     name  = "adminPassword"
     value = var.grafana_admin_password
   }

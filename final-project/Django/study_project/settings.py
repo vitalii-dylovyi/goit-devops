@@ -3,7 +3,9 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-study-project-secret-key")
+# SECRET_KEY is read from the environment (injected via a Kubernetes Secret in
+# production). The fallback is an obvious dev-only placeholder, never a real key.
+SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-dev-only-change-me")
 
 DEBUG = True
 

@@ -149,7 +149,7 @@ variable "db_port" {
 }
 
 variable "allowed_cidr_blocks" {
-  description = "CIDR blocks allowed to connect to the database"
+  description = "CIDR blocks allowed to connect to the database (keep private; never 0.0.0.0/0)"
   type        = list(string)
-  default     = ["0.0.0.0/0"]
+  default     = ["10.0.0.0/16"]
 }

@@ -20,7 +20,13 @@ resource "helm_release" "argo_apps" {
   create_namespace = false
 
   values = [
-    file("${path.module}/charts/values.yaml")
+    templatefile("${path.module}/charts/values.yaml.tmpl", {
+      github_username   = var.github_username
+      github_pat        = var.github_pat
+      db_host           = var.db_host
+      db_password       = var.db_password
+      django_secret_key = var.django_secret_key
+    })
   ]
 
   depends_on = [helm_release.argo_cd]

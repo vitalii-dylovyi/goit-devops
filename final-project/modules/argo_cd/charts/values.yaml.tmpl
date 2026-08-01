@@ -9,6 +9,14 @@ applications:
       helm:
         valueFiles:
           - values.yaml
+        # Real DB endpoint + secrets injected by Terraform (never committed to Git)
+        parameters:
+          - name: config.POSTGRES_HOST
+            value: "${db_host}"
+          - name: secretConfig.POSTGRES_PASSWORD
+            value: "${db_password}"
+          - name: secretConfig.SECRET_KEY
+            value: "${django_secret_key}"
     destination:
       server: https://kubernetes.default.svc
       namespace: default
@@ -20,5 +28,5 @@ applications:
 repositories:
   - name: goit-devops
     url: https://github.com/vitalii-dylovyi/goit-devops.git
-    username: <YOUR_GITHUB_USERNAME>
-    password: <YOUR_GITHUB_PAT>
+    username: ${github_username}
+    password: ${github_pat}

@@ -12,4 +12,5 @@ COPY . .
 
 EXPOSE 8000
 
-CMD ["gunicorn", "study_project.wsgi:application", "--bind", "0.0.0.0:8000"]
+# Apply DB migrations on startup, then serve the app
+CMD ["sh", "-c", "python manage.py migrate --noinput && gunicorn study_project.wsgi:application --bind 0.0.0.0:8000"]

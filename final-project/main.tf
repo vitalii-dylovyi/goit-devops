@@ -109,10 +109,14 @@ module "rds" {
   subnet_public_ids   = module.vpc.private_subnet_ids
   publicly_accessible = false
 
+  # Restrict DB access to the VPC only (never 0.0.0.0/0)
+  allowed_cidr_blocks = ["10.0.0.0/16"]
+
   parameters = {
     max_connections            = "200"
     log_min_duration_statement = "500"
     work_mem                   = "8192"
+    log_statement              = "all"
   }
 
   tags = {
@@ -144,23 +148,51 @@ module "argo_cd" {
   namespace     = "argocd"
   chart_version = "5.46.4"
 
+  # Repository credentials for private-repo sync
+  github_username = var.github_username
+  github_pat      = var.github_pat
+
+  # Injected into the django-app via Argo CD helm parameters so the app connects
+  # to the real RDS instance with a real password / secret key (none committed)
+  db_host           = module.rds.endpoint
+  db_password       = var.db_password
+  django_secret_key = var.django_secret_key
+
   providers = {
     helm       = helm
     kubernetes = kubernetes
     aws        = aws
   }
 
-  depends_on = [module.eks]
+  depends_on = [module.eks, module.rds]
 }
 
 # --- Monitoring: Prometheus + Grafana ---
 module "monitoring" {
-  source    = "./modules/monitoring"
-  namespace = "monitoring"
+  source                 = "./modules/monitoring"
+  namespace              = "monitoring"
+  grafana_admin_password = var.grafana_admin_password
 
   providers = {
     helm       = helm
     kubernetes = kubernetes
+  }
+
+  depends_on = [module.eks]
+}
+
+# --- metrics-server: supplies resource metrics for HPA (not installed on EKS by default) ---
+resource "helm_release" "metrics_server" {
+  name             = "metrics-server"
+  namespace        = "kube-system"
+  repository       = "https://kubernetes-sigs.github.io/metrics-server/"
+  chart            = "metrics-server"
+  version          = "3.12.1"
+  create_namespace = false
+
+  set {
+    name  = "args[0]"
+    value = "--kubelet-insecure-tls"
   }
 
   depends_on = [module.eks]

@@ -29,10 +29,9 @@ variable "cluster_name" {
 }
 
 variable "db_password" {
-  description = "Master password for the RDS/Aurora database"
+  description = "Master password for the RDS/Aurora database, supplied via TF_VAR_db_password (never committed)"
   type        = string
   sensitive   = true
-  default     = "admin123AWS23"
 }
 
 variable "github_username" {
@@ -52,5 +51,16 @@ variable "jenkins_admin_password" {
   description = "Jenkins admin password, supplied via TF_VAR_jenkins_admin_password (never committed)"
   type        = string
   sensitive   = true
-  default     = "admin123"
+}
+
+variable "grafana_admin_password" {
+  description = "Grafana admin password, supplied via TF_VAR_grafana_admin_password (never committed)"
+  type        = string
+  sensitive   = true
+}
+
+variable "django_secret_key" {
+  description = "Django SECRET_KEY, supplied via TF_VAR_django_secret_key (never committed)"
+  type        = string
+  sensitive   = true
 }
